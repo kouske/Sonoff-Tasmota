@@ -658,16 +658,40 @@ void HueLights(String *path)
         response.replace("{cm", "on");
 
         on = hue_json["on"];
+
+        // Need to enable interlock mode for this to work properly
         switch(on)
         {
-          case false : ExecuteCommandPower(device, POWER_OFF, SRC_HUE);
-                       response.replace("{re", "false");
-                       break;
-          case true  : ExecuteCommandPower(device, POWER_ON, SRC_HUE);
-                       response.replace("{re", "true");
-                       break;
-          default    : response.replace("{re", (power & (1 << (device-1))) ? "true" : "false");
-                       break;
+            case false:
+            {
+              // If one of the relays is currently on and we got an off command
+              // Then turn both relays off (Window Off used both for Down and for off)
+              if (Settings.power)
+              {
+                ExecuteCommandPower(1, POWER_OFF, SRC_HUE);
+                ExecuteCommandPower(2, POWER_OFF, SRC_HUE);
+              }
+              else
+              {
+                // If we got an off command, turn on the inverted relay (Window Down)
+                ExecuteCommandPower(1, POWER_ON, SRC_HUE);
+              }
+              response.replace("{re", "false");
+            }
+            break;
+
+            case true:
+            {
+              ExecuteCommandPower(2, POWER_ON, SRC_HUE);
+              response.replace("{re", "true");
+            }
+            break;
+
+            default:
+            {
+              response.replace("{re", (power & (1 << (device-1))) ? "true" : "false");
+            }
+            break;
         }
         resp = true;
       }
