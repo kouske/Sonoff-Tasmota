@@ -660,9 +660,19 @@ void HueLights(String *path)
         on = hue_json["on"];
         switch(on)
         {
-          case false : ExecuteCommandPower(device, POWER_OFF, SRC_HUE);
-                       response.replace("{re", "false");
-                       break;
+          case false : {
+                          if (Settings.power)
+                          {
+                            ExecuteCommandPower(1, POWER_OFF, SRC_HUE);
+                            ExecuteCommandPower(2, POWER_OFF, SRC_HUE);
+                            response.replace("{re", "false");
+                            break;
+                          }
+
+                          ExecuteCommandPower(device, POWER_OFF, SRC_HUE);
+                          response.replace("{re", "false");
+                          break;
+                        }
           case true  : ExecuteCommandPower(device, POWER_ON, SRC_HUE);
                        response.replace("{re", "true");
                        break;
